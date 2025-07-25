@@ -1,6 +1,6 @@
 // main.js (CORREGIDO Y REFACTORIZADO PARA MULTI-PUNTO)
 import { appState } from './state.js';
-import { render, setupUIEventListeners, addRemoteAudio, removeRemoteAudio } from './ui.js';
+import { render, setupUIEventListeners, addLocalVideo, addRemoteVideoAndAudio, removeRemoteVideo } from './ui-video.js';
 import { SignalingChannel } from './signaling.js';
 import { WebRTCManager } from './webrtc.js';
 
@@ -15,11 +15,12 @@ const App = {
         appState.isListener = params.get('mode') === 'listen'; 
 
         // CAMBIO LISTENER: Pasar el estado de listener al WebRTCManager
+
         this.webrtc = new WebRTCManager(
             (peerId, candidate) => this.signaling.sendSignal(peerId, { candidate }),
             (peerId, stream) => this.handleRemoteStream(peerId, stream),
             (peerId, state) => this.handleConnectionStateChange(peerId, state),
-            appState.isListener // Le pasamos si es listener o no
+            appState.isListener
         );
 
         if (!appState.myId || !appState.roomId) {
@@ -30,23 +31,28 @@ const App = {
         // CAMBIO LISTENER: Solo pedir micrófono si NO somos un listener.
         if (!appState.isListener) {
             try {
+                // CAMBIO: VIDEO - Pedimos video además de audio.
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, 
-                    video: false 
+                    video: true // Pedimos una resolución de video estándar
                 });
                 appState.localStream = stream;
+                // CAMBIO: VIDEO - Mostramos nuestro propio video en la UI.
+                addLocalVideo(stream); 
+                
                 this.webrtc.setLocalStream(stream);
                 this.webrtc.toggleMic(appState.isMicEnabled);
-                this.setState({ status: 'Audio listo. Conectando...' });
+                // CAMBIO: VIDEO - Añadimos estado y control para la cámara.
+                this.webrtc.toggleCam(appState.isCamEnabled); 
+                this.setState({ status: 'Cámara y audio listos. Conectando...' });
             } catch (error) {
-                console.error("Error al obtener el micrófono:", error);
-                this.setState({ status: 'Error: Se necesita acceso al micrófono para participar.' });
-                // En un caso real, podrías mostrar un mensaje y no continuar.
+                console.error("Error al obtener audio/video:", error);
+                this.setState({ status: 'Error: Se necesita acceso a cámara y micrófono para participar.' });
                 return;
             }
         } else {
-            // Si somos un listener, no necesitamos stream local.
-            appState.isMicEnabled = false; // El micro siempre está "apagado"
+            appState.isMicEnabled = false; 
+            appState.isCamEnabled = false; // CAMBIO: VIDEO - La cámara también está "apagada"
             this.setState({ status: 'Modo escucha activado. Conectando...' });
         }
 
@@ -63,8 +69,12 @@ const App = {
             }
         );
 
+
         this.signaling.connect();
-        setupUIEventListeners({ onMicToggle: () => this.toggleMicrophone() });
+        setupUIEventListeners({ 
+            onMicToggle: () => this.toggleMicrophone(),
+            onCamToggle: () => this.toggleCamera() 
+        });
         this.render(); // Render inicial
     },
 
@@ -82,7 +92,16 @@ const App = {
     render() {
         render(appState);
     },
-
+    toggleCamera() {
+        if (!appState.localStream) return;
+        const newCamState = !appState.isCamEnabled;
+        this.webrtc.toggleCam(newCamState);
+        this.setState({ isCamEnabled: newCamState });
+    },
+    handleRemoteStream(peerId, stream) {
+        // CAMBIO: VIDEO - En lugar de audio, añadimos el elemento de video y audio.
+        addRemoteVideoAndAudio(peerId, stream);
+    },
     toggleMicrophone() {
         if (!appState.localStream) return;
         const newMicState = !appState.isMicEnabled;
@@ -166,13 +185,12 @@ const App = {
         console.log(`Usuario ${peerId} se ha desconectado.`);
         this.webrtc.closeConnection(peerId);
         
-        // Eliminar el par del estado
         const newPeers = { ...appState.peers };
         delete newPeers[peerId];
         this.setState({ peers: newPeers, status: `Usuario ${peerId} se fue.` });
 
-        // Eliminar su elemento de audio de la UI
-        removeRemoteAudio(peerId);
+        // CAMBIO: VIDEO - Eliminar su elemento de video de la UI
+        removeRemoteVideo(peerId);
     },
 
     handleRoomOwnerChanged(data) {
@@ -186,12 +204,6 @@ const App = {
     },
 
     // --- LÓGICA WebRTC (REFACTORIZADA) ---
-
-    handleRemoteStream(peerId, stream) {
-        // La UI ahora debe crear un elemento de audio por cada par
-        addRemoteAudio(peerId, stream);
-    },
-    
     handleConnectionStateChange(peerId, connectionState) {
         console.log(`Estado de la conexión P2P con ${peerId}: ${connectionState}`);
         

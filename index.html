@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lobby de Chat</title>
-    <link rel="stylesheet" href="./style.css">
+    <!-- Asegúrate de que este CSS tiene los estilos para el nuevo botón -->
+    <link rel="stylesheet" href="./style.css"> 
 </head>
 <body>
     <div id="app">
@@ -22,17 +23,21 @@
                 <p style="text-align: center; color: #aaa;">Elige el tipo de chat para crear o unirte:</p>
                 <a href="#" class="button button-primary" data-type="text">Chat de Texto</a>
                 <a href="#" class="button button-success" data-type="voice">Chat de Voz</a>
+                <!-- <<< LÍNEA AÑADIDA >>> -->
+                <a href="#" class="button button-danger" data-type="video">Chat de Video</a>
             </div>
         </div>
     </div>
     <script>
+        // --- ESTE SCRIPT NO NECESITA NINGÚN CAMBIO ---
+        // Funciona perfectamente con el nuevo botón gracias a `e.target.dataset.type`
         document.querySelector('.button-group').addEventListener('click', (e) => {
             if (e.target.tagName === 'A') {
                 e.preventDefault();
                 
                 const userId = document.getElementById('userId').value.trim();
                 const roomId = document.getElementById('roomId').value.trim();
-                const chatType = e.target.dataset.type;
+                const chatType = e.target.dataset.type; // <-- Esto leerá "video" del nuevo botón
 
                 if (!userId || !roomId) {
                     alert('Por favor, introduce tu nombre y el de la sala.');
@@ -45,7 +50,7 @@
                     roomId: roomId
                 });
 
-                // Redirige a la página correspondiente
+                // Redirige a la página correspondiente (chat-video.html)
                 window.location.href = `chat-${chatType}.html?${params.toString()}`;
             }
         });

@@ -75,6 +75,8 @@ body {
 .button-secondary:hover { background-color: #5a6268; }
 .button-success { background-color: var(--success-color); color: white; }
 .button-success:hover { background-color: #218838; }
+.button-danger { background-color: var(--danger-color); color: white; }
+.button-danger:hover { background-color: #c82333; }
 
 /* Estilos específicos del chat */
 .chat-window { display: flex; flex-direction: column; height: 350px; }
@@ -98,3 +100,93 @@ body {
 .voice-status p { font-size: 1.2em; margin: 5px 0; }
 .voice-status .peer-name { color: var(--primary-color); font-weight: bold; }
 audio { display: none; }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .voice-status {
+            padding: 2rem 0;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .peer-name {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .mic-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .mic-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .mic-button.active {
+            background: #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .mic-button.active:hover {
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .mic-status {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .connection-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dc3545;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .connection-indicator.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
